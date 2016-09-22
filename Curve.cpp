@@ -54,17 +54,16 @@ void Curve::drawCurve(Color curveColor, float curveThickness, int window)
 		calculatePoint(start, t);
 		if (t + window >= endTime) {
 			calculatePoint(end, endTime - 0.25);
-		}
-		else {
+		} else {
 			calculatePoint(end, t + window);
 		}
-		DrawLib::drawLine(start, end, curveColor, curveThickness);
+		DrawLib::drawLine( start, end, curveColor, curveThickness);
 	}
 
 	// Robustness: make sure there is at least two control point: start and end points
 	// Move on the curve from t=0 to t=finalPoint, using window as step size, and linearly interpolate the curve points
 	// Note that you must draw the whole curve at each frame, that means connecting line segments between each two points on the curve
-
+	
 	return;
 #endif
 }
@@ -134,8 +133,8 @@ bool Curve::checkRobust()
 bool Curve::findTimeInterval(unsigned int& nextPoint, float time)
 {
 	for (int i = 0; i < controlPoints.size(); i++) {
-		if (controlPoints[i].time > time) {
-			nextPoint = i + 1;
+		if (controlPoints[ i].time > time) {
+			nextPoint = i;
 			return true;
 		}
 	}
@@ -144,7 +143,7 @@ bool Curve::findTimeInterval(unsigned int& nextPoint, float time)
 }
 
 // Implement Hermite curve
-Point Curve::useHermiteCurve(unsigned int nextPoint, const float time)
+Point Curve::useHermiteCurve(const unsigned int nextPoint, const float time)
 {
 	Point newPosition;
 	float normalTime, intervalTime;
@@ -152,31 +151,31 @@ Point Curve::useHermiteCurve(unsigned int nextPoint, const float time)
 	float blending[4];
 	float G[4][3];
 	float point[3];
-
+	
 	intervalTime = controlPoints[nextPoint].time - controlPoints[nextPoint - 1].time;
 	normalTime = (time - controlPoints[nextPoint - 1].time) / intervalTime;
-
+	
 	float t2 = normalTime * normalTime;
 	float t3 = t2 * normalTime;
-	blending[0] = 2 * t3 - 3 * t2 + 1;
-	blending[1] = -2 * t3 + 3 * t2;
-	blending[2] = t3 - 2 * t2 + normalTime;
+	blending[0] = 2*t3 - 3*t2 + 1;
+	blending[1] = -2*t3 + 3*t2;
+	blending[2] = t3 - 2*t2 + normalTime;
 	blending[3] = t3 - t2;
 
 	Point tangent1 = Point(controlPoints[nextPoint - 1].tangent.x, controlPoints[nextPoint - 1].tangent.y, controlPoints[nextPoint - 1].tangent.z);
 	Point tangent2 = Point(controlPoints[nextPoint].tangent.x, controlPoints[nextPoint].tangent.y, controlPoints[nextPoint].tangent.z);
-
+	
 	newPosition = blending[0] * controlPoints[nextPoint - 1].position;
 	newPosition = newPosition + blending[1] * controlPoints[nextPoint].position;
 	newPosition = newPosition + blending[2] * tangent1 * intervalTime;
 	newPosition = newPosition + blending[3] * tangent2 * intervalTime;
-
+	
 	// Return result
 	return newPosition;
 }
 
 // Implement Catmull-Rom curve
-Point Curve::useCatmullCurve(unsigned int nextPoint, const float time)
+Point Curve::useCatmullCurve(const unsigned int nextPoint, const float time)
 {
 	Point newPosition;
 
@@ -186,7 +185,7 @@ Point Curve::useCatmullCurve(unsigned int nextPoint, const float time)
 	Point cp[4];
 	int i = 0; //edge cases
 	int max = 4;//used to handle edge cases of Catmull
-	
+
 	if (nextPointq == controlPoints.size() - 1) //Shouldn't ever run, I think, since it'll be the end of drawing, but just in case
 		return controlPoints[nextPointq].position;
 
@@ -202,9 +201,9 @@ Point Curve::useCatmullCurve(unsigned int nextPoint, const float time)
 		t[3] = -1 * (controlPoints[nextPointq].time + controlPoints[nextPointq - 1].time) / 2;
 		max--;
 	}
-	while(i < max) {
-		t[i] = controlPoints[nextPointq -1 + i].time;
-		cp[i] = controlPoints[nextPointq -1 + i].position;
+	while (i < max) {
+		t[i] = controlPoints[nextPointq - 1 + i].time;
+		cp[i] = controlPoints[nextPointq - 1 + i].position;
 		i++;
 	}
 	if ((int)t[0] + (int)t[1] == 0)
@@ -222,7 +221,7 @@ Point Curve::useCatmullCurve(unsigned int nextPoint, const float time)
 	//std::cout << nextPointq << std::endl;
 
 	// Calculate position at t = time on Catmull-Rom curve
-	
+
 	// Return result
 	/*
 	std::cout << newPosition.x << " " << newPosition.y << " " << newPosition.z << " " << std::endl;
@@ -230,10 +229,10 @@ Point Curve::useCatmullCurve(unsigned int nextPoint, const float time)
 	std::cout << t[0] << " " << t[1] << " " << t[2] << " " << t[3] << " " << std::endl;
 
 	for (int i = 0; i < controlPoints.size(); i++) {
-		std::cout << controlPoints.size() << " Info controlpoints: x pos: " << controlPoints.at(i).position.x << std::endl;
-		std::cout << controlPoints.size() << " Info controlpoints: time: " << controlPoints.at(i).time << std::endl;
-		//std::cout << controlPoints[nextPointq].time << std::endl;
-		
+	std::cout << controlPoints.size() << " Info controlpoints: x pos: " << controlPoints.at(i).position.x << std::endl;
+	std::cout << controlPoints.size() << " Info controlpoints: time: " << controlPoints.at(i).time << std::endl;
+	//std::cout << controlPoints[nextPointq].time << std::endl;
+
 	}
 	*/
 	return newPosition;
